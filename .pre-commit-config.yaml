@@ -50,11 +50,11 @@ repos:
         args: [-c=.yamllint.yaml]
         exclude: ^(.github/workflows|.pre-commit-config.yaml)
 
-  - repo: 'https://github.com/jumanjihouse/pre-commit-hooks'
-    rev: 2.1.6
-    hooks:
-      - id: shellcheck
-        exclude: (.*\.sh\.tmpl)
+    # - repo: 'https://github.com/jumanjihouse/pre-commit-hooks'
+    # rev: 2.1.6
+    # hooks:
+          # - id: shellcheck
+          # exclude: (.*\.sh\.tmpl)
           # - id: shfmt
           # - id: git-check
           #- id: check-mailmap
