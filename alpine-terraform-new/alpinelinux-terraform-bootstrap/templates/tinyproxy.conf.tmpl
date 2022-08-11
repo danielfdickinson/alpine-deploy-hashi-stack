@@ -1,0 +1,20 @@
+User nobody
+Group nobody
+Port 8888
+Listen ${vpc_ipv4_address}
+Timeout 600
+DefaultErrorFile "/usr/share/tinyproxy/default.html"
+StatFile "/usr/share/tinyproxy/stats.html"
+Syslog On
+LogLevel Info
+MaxClients 100
+Allow 127.0.0.1
+Allow ::1
+Allow ${allow_subnet}
+ViaProxyName "tinyproxy"
+ConnectPort 443
+ConnectPort 563
+
+
+
+

@@ -1,0 +1,11 @@
+# ---> Terraform (For testing only)
+*.plan
+*.tfstate*
+.terraform*
+*.lock.hcl
+
+# Crash log
+crash.log
+
+# Private (that is not pushed to Git) variables
+priv-vars-*.hcl

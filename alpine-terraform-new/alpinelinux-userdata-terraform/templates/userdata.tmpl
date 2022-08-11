@@ -1,0 +1,39 @@
+#cloud-config
+%{~ for k in keys(userdata_scalars) ~}
+%{~ if userdata_scalars[k] != null}
+${k}: ${jsonencode(userdata_scalars[k])}
+%{~ endif ~}
+%{~ endfor ~}
+%{~ for k in keys(userdata_objects) ~}
+%{~ if userdata_objects[k] != null ~}
+%{~ if length(userdata_objects[k]) > 0}
+${k}: ${jsonencode(userdata_objects[k])}
+%{endif ~}
+%{~ endif ~}
+%{~ endfor ~}
+%{~ for k in keys(userdata_scalar_lists) ~}
+%{~ if userdata_scalar_lists[k] != null ~}
+%{~ if length(userdata_scalar_lists[k]) > 0}
+${k}:
+${yamlencode(userdata_scalar_lists[k])}
+%{endif ~}
+%{~ endif ~}
+%{~ endfor ~}
+%{~ for k in keys(userdata_list_lists) ~}
+%{~ if userdata_list_lists[k] != null ~}
+%{~ if length(userdata_list_lists[k]) > 0}
+${k}: ${jsonencode(userdata_list_lists[k])}
+%{endif ~}
+%{~ endif ~}
+%{~ endfor ~}
+%{~ for k in keys(userdata_object_lists) ~}
+%{~ if userdata_object_lists[k] != null ~}
+%{~ if length(userdata_object_lists[k]) > 0}
+${k}:
+%{~ for l in userdata_object_lists[k]}
+- ${jsonencode(l)}
+%{endfor ~}
+%{~ endif ~}
+%{~ endif ~}
+%{~ endfor ~}
+
