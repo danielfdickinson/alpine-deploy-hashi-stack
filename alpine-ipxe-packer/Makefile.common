@@ -1,0 +1,32 @@
+export
+
+all: install
+
+install: stamps/${IMAGE_NAME}.stamp
+
+run: install stamps/${IMAGE_NAME}.plan
+
+stamps/${IMAGE_NAME}.stamp:
+	mkdir -p stamps
+	packer validate -var-file=vars-${IMAGE_NAME}.pkrvars.hcl images-via-iPXE
+	packer build -var-file=vars-${IMAGE_NAME}.pkrvars.hcl images-via-iPXE
+	touch "$@"
+
+clean:
+	rm -f test/${IMAGE_TEST_TYPE}/${IMAGE_NAME}.plan
+	rm -f test/${IMAGE_TEST_TYPE}/.terraform.lock.hcl
+	rm -f stamps/${IMAGE_NAME}.stamp
+	rm -f stamps/${IMAGE_NAME}.plan
+
+test/base-image/.terraform.lock.hcl:
+	true
+
+test/${IMAGE_TEST_TYPE}/.terraform.lock.hcl:
+	cd test/${IMAGE_TEST_TYPE} && terraform init -var-file=$(CURDIR)/vars-${IMAGE_NAME}.tfvars.hcl
+
+stamps/${IMAGE_NAME}.plan: test/${IMAGE_TEST_TYPE}/.terraform.lock.hcl stamps/${IMAGE_NAME}.stamp
+	if [ "${IMAGE_TEST_TYPE}" != "base-image" ]; then terraform -chdir=test/${IMAGE_TEST_TYPE} plan -var-file=$(CURDIR)/vars-${IMAGE_NAME}.tfvars.hcl -out "${IMAGE_NAME}.plan"; fi
+	if [ "${IMAGE_TEST_TYPE}" != "base-image" ]; then terraform -chdir=test/${IMAGE_TEST_TYPE} apply "${IMAGE_NAME}.plan"; fi
+	if [ "${IMAGE_TEST_TYPE}" != "base-image" ]; then terraform -chdir=test/${IMAGE_TEST_TYPE} destroy -var-file=$(CURDIR)/vars-${IMAGE_NAME}.tfvars.hcl -auto-approve; fi
+	touch "$@"
+

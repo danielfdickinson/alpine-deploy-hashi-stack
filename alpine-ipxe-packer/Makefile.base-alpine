@@ -1,0 +1,8 @@
+IMAGE_NAME=base-alpine
+IMAGE_TEST_TYPE=base-image
+
+export
+
+%:
+	$(MAKE) -f Makefile.common "$@"
+

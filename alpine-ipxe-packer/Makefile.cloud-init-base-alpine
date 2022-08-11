@@ -1,0 +1,8 @@
+IMAGE_NAME=cloud-init-base-alpine
+IMAGE_TEST_TYPE=cloud-init-image
+
+export
+
+%:
+	$(MAKE) -f Makefile.common "$@"
+
