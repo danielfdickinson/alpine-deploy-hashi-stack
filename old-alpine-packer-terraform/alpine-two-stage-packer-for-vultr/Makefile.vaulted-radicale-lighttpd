@@ -1,0 +1,18 @@
+# NOTE: Instance configuration will require updating `/etc/radicale/config`
+# to use SSL certificates and listen for non-local requests
+# NOTE: For an internet-facing and/or high-volume server you will want to
+# add and configure radicale behind a proxy. In addition you would do well
+# to configure the use of uwsgi instead of running radicale as a standalone
+# server.
+
+IMAGE_NAME=vaulted-radicale-lighttpd
+IMAGE_VERSION=0.1.3
+IMAGE_PACKER_MODULE=images-from-snapshot
+IMAGE_SOURCE=vultr.cloud-init-alpine-image
+IMAGE_TEST_TYPE=cloud-init-image
+IMAGE_PACKAGES=["apache2-utils", "py3-bcrypt", "radicale", "lighttpd", "certbot", "restic", "curl", "jq"]
+
+export
+
+%:
+	$(MAKE) -f Makefile.common "$@"

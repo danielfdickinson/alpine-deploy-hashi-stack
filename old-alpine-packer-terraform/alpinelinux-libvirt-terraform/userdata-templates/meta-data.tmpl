@@ -1,0 +1,8 @@
+instance-id: iid-${instance_name}-${host_tag}-${image_full_version}
+hostname: ${instance_name}-${host_tag}
+network-interfaces: |
+    auto eth0
+    iface eth0 inet static
+    address ${ipv4_address}
+    gateway ${ipv4_gateway}
+

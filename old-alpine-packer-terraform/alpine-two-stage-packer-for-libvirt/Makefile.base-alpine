@@ -1,0 +1,11 @@
+IMAGE_NAME=base-alpine
+IMAGE_VERSION=0.1.4
+IMAGE_PACKER_MODULE=images-from-virt-iso
+IMAGE_SOURCE=qemu.base-alpine-image
+IMAGE_TEST_TYPE=base-image
+
+export
+
+%:
+	$(MAKE) -f Makefile.common "$@"
+

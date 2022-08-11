@@ -1,0 +1,7 @@
+# ---> Terraform
+*.plan
+.terraform
+
+# Build system
+*.stamp
+

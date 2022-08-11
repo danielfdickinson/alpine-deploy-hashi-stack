@@ -1,0 +1,12 @@
+IMAGE_NAME=cloud-init-base-alpine
+IMAGE_VERSION=0.3.8
+IMAGE_PACKER_MODULE=images-from-qcow2
+IMAGE_SOURCE=qemu.cloud-init-alpine-image
+IMAGE_TEST_TYPE=cloud-init-image
+IMAGE_BASE_QCOW2=base-alpine_0.1.4-3.15.4
+IMAGE_BASE_CHECKSUM=$(shell sha256sum output/${IMAGE_BASE_QCOW2}/${IMAGE_BASE_QCOW2}.qcow2 | awk '{ print $$1 }')
+
+export
+
+%:
+	$(MAKE) -f Makefile.common "$@"

@@ -1,0 +1,21 @@
+# ---> Packer
+# Cache objects
+packer_cache/
+
+# Crash log
+crash.log
+
+# For built boxes
+*.box
+
+# Output
+output*
+
+# ---> Terraform (For testing only)
+*.plan
+*.tfstate*
+.terraform
+
+# Build system
+*.stamp
+stamps

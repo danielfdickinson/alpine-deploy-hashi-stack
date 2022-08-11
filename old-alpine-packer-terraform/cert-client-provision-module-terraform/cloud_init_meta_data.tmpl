@@ -1,0 +1,10 @@
+instance-id: iid-${instance_hostname_short}-${instance_full_version}-${instance_extra_version}
+network-interfaces: |
+  auto eth0
+  iface eth0 inet static
+  address ${instance_ip_address}
+  netmask ${instance_netmask}
+  gateway ${instance_gateway}
+
+hostname: ${instance_fqdn}
+

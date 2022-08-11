@@ -1,0 +1,59 @@
+IMAGE_FULL_VERSION=${IMAGE_NAME}_${IMAGE_VERSION}-${ALPINE_FULL_VERSION}
+PKR_VAR_image_full_version=${IMAGE_FULL_VERSION}
+TF_VAR_image_full_version=${IMAGE_FULL_VERSION}
+
+ifneq (${IMAGE_PACKAGES},)
+PKR_VAR_image_packages=${IMAGE_PACKAGES}
+endif
+ifneq (${IMAGE_APK_REPO_BASES},)
+PKR_VAR_apk_repo_bases=${IMAGE_APK_REPO_BASES}
+endif
+
+ifneq (${IMAGE_BASE_QCOW2},)
+PKR_VAR_base_image_url=file://$(CURDIR)/output/${IMAGE_BASE_QCOW2}/${IMAGE_BASE_QCOW2}.qcow2
+endif
+ifneq (${IMAGE_BASE_CHECKSUM},)
+PKR_VAR_base_image_checksum=${IMAGE_BASE_CHECKSUM}
+endif
+
+PKR_VAR_alpine_base_version=${ALPINE_BASE_VERSION}
+PKR_VAR_alpine_full_version=${ALPINE_FULL_VERSION}
+PKR_VAR_image_name=${IMAGE_NAME}
+PKR_VAR_image_version=${IMAGE_VERSION}
+TF_VAR_alpine_base_version=${ALPINE_BASE_VERSION}
+TF_VAR_alpine_full_version=${ALPINE_FULL_VERSION}
+TF_VAR_image_name=${IMAGE_NAME}
+TF_VAR_image_version=${IMAGE_VERSION}
+
+export
+
+all: install
+
+install: stamps/${IMAGE_FULL_VERSION}.stamp
+
+run: install stamps/${IMAGE_FULL_VERSION}.plan
+
+stamps/${IMAGE_FULL_VERSION}.stamp:
+	mkdir -p output stamps
+	packer validate -var-file vars-${IMAGE_NAME}.pkrvars.hcl ${IMAGE_PACKER_MODULE}
+	packer build -var-file vars-${IMAGE_NAME}.pkrvars.hcl -only ${IMAGE_NAME}.${IMAGE_SOURCE} ${IMAGE_PACKER_MODULE}
+	touch "$@"
+
+clean:
+	rm -f test/${IMAGE_FULL_VERSION}.plan
+	rm -f test/${IMAGE_TEST_TYPE}/.terraform.lock.hcl
+	rm -rf output/${IMAGE_FULL_VERSION}
+	rm -f stamps/${IMAGE_FULL_VERSION}.stamp
+	rm -f stamps/${IMAGE_FULL_VERSION}.plan
+
+test/${IMAGE_TEST_TYPE}/.terraform.lock.hcl:
+	cd test/${IMAGE_TEST_TYPE} && terraform init
+
+test/${IMAGE_FULL_VERSION}.plan: test/${IMAGE_TEST_TYPE}/.terraform.lock.hcl stamps/${IMAGE_FULL_VERSION}.stamp
+	cd test/${IMAGE_TEST_TYPE} && terraform plan -out "../${IMAGE_FULL_VERSION}.plan"
+
+stamps/${IMAGE_FULL_VERSION}.plan: test/${IMAGE_TEST_TYPE}/.terraform.lock.hcl test/${IMAGE_FULL_VERSION}.plan
+	cd test/${IMAGE_TEST_TYPE} && terraform apply "../${IMAGE_FULL_VERSION}.plan"
+	cd test/${IMAGE_TEST_TYPE} && terraform destroy -auto-approve
+	touch "$@"
+

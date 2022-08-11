@@ -1,0 +1,68 @@
+IMAGE_FULL_VERSION=${IMAGE_NAME}_${IMAGE_VERSION}-${ALPINE_FULL_VERSION}
+PKR_VAR_image_full_version=${IMAGE_FULL_VERSION}
+TF_VAR_image_full_version=${IMAGE_FULL_VERSION}
+
+IMAGE_VERSION_FULL=${IMAGE_VERSION}-${ALPINE_FULL_VERSION}
+PKR_VAR_image_version=${IMAGE_VERSION_FULL}
+TF_VAR_image_version=${IMAGE_VERSION_FULL}
+
+
+PKR_VAR_base_snapshot_id=${IMAGE_BASE_SNAPSHOT_ID}
+TF_VAR_base_snapshot_id=${IMAGE_BASE_SNAPSHOT_ID}
+PKR_VAR_plan_id=${IMAGE_PLAN_ID}
+TF_VAR_plan_id=${IMAGE_PLAN_ID}
+PKR_VAR_region_id=${IMAGE_REGION_ID}
+TF_VAR_region_id=${IMAGE_REGION_ID}
+
+ifneq (${IMAGE_PACKAGES},)
+PKR_VAR_image_packages=${IMAGE_PACKAGES}
+endif
+ifneq (${IMAGE_APK_REPO_BASES},)
+PKR_VAR_apk_repo_bases=${IMAGE_APK_REPO_BASES}
+endif
+
+PKR_VAR_alpine_base_version=${ALPINE_BASE_VERSION}
+PKR_VAR_alpine_full_version=${ALPINE_FULL_VERSION}
+PKR_VAR_image_name=${IMAGE_NAME}
+PKR_VAR_image_version=${IMAGE_VERSION}
+TF_VAR_alpine_base_version=${ALPINE_BASE_VERSION}
+TF_VAR_alpine_full_version=${ALPINE_FULL_VERSION}
+TF_VAR_image_name=${IMAGE_NAME}
+TF_VAR_image_version=${IMAGE_VERSION}
+
+export
+
+all: install
+
+ensure-vars:
+	if [ -z "$$IMAGE_BASE_SNAPSHOT_ID" ]; then echo "Missing IMAGE_BASE_SNAPSHOT_ID"; exit 1; fi
+	if [ -z "$$IMAGE_PLAN_ID" ]; then echo "Missing IMAGE_PLAN_ID"; exit 1; fi
+	if [ -z "$$IMAGE_REGION_ID" ]; then echo "Missing IMAGE_REGION_ID"; exit 1; fi
+
+install: ensure-vars stamps/${IMAGE_FULL_VERSION}.stamp
+
+run: install stamps/${IMAGE_FULL_VERSION}.plan
+
+stamps/${IMAGE_FULL_VERSION}.stamp:
+	mkdir -p stamps
+	packer validate -var-file vars-${IMAGE_NAME}.pkrvars.hcl ${IMAGE_PACKER_MODULE}
+	packer build -var-file vars-${IMAGE_NAME}.pkrvars.hcl -only ${IMAGE_NAME}.${IMAGE_SOURCE} ${IMAGE_PACKER_MODULE}
+	touch "$@"
+
+clean:
+	rm -f test/${IMAGE_FULL_VERSION}.plan
+	rm -f test/${IMAGE_TEST_TYPE}/.terraform.lock.hcl
+	rm -f stamps/${IMAGE_FULL_VERSION}.stamp
+	rm -f stamps/${IMAGE_FULL_VERSION}.plan
+
+test/${IMAGE_TEST_TYPE}/.terraform.lock.hcl:
+	cd test/${IMAGE_TEST_TYPE} && terraform init
+
+test/${IMAGE_FULL_VERSION}.plan: test/${IMAGE_TEST_TYPE}/.terraform.lock.hcl stamps/${IMAGE_FULL_VERSION}.stamp
+	cd test/${IMAGE_TEST_TYPE} && terraform plan -out "../${IMAGE_FULL_VERSION}.plan"
+
+stamps/${IMAGE_FULL_VERSION}.plan: test/${IMAGE_TEST_TYPE}/.terraform.lock.hcl test/${IMAGE_FULL_VERSION}.plan
+	cd test/${IMAGE_TEST_TYPE} && terraform apply "../${IMAGE_FULL_VERSION}.plan"
+	cd test/${IMAGE_TEST_TYPE} && terraform destroy -auto-approve
+	touch "$@"
+

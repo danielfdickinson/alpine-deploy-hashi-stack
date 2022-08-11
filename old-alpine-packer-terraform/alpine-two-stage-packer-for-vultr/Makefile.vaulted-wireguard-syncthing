@@ -1,0 +1,12 @@
+
+IMAGE_NAME=vaulted-wireguard-syncthing
+IMAGE_VERSION=0.1.3
+IMAGE_PACKER_MODULE=images-from-snapshot
+IMAGE_SOURCE=vultr.cloud-init-alpine-image
+IMAGE_TEST_TYPE=cloud-init-image
+IMAGE_PACKAGES=["wireguard-tools-wg-quick", "wireguard-tools-wg", "syncthing-utils", "restic", "curl", "jq"]
+
+export
+
+%:
+	$(MAKE) -f Makefile.common "$@"

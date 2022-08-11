@@ -1,0 +1,20 @@
+# NOTE: Instance configuration will require updating `/etc/radicale/config`
+# to use SSL certificates and listen for non-local requests
+# NOTE: For an internet-facing and/or high-volume server you will want to
+# add and configure radicale behind a proxy. In addition you would do well
+# to configure the use of uwsgi instead of running radicale as a standalone
+# server.
+
+IMAGE_NAME=cloud-init-radicale
+IMAGE_VERSION=0.1.4
+IMAGE_PACKER_MODULE=images-from-qcow2
+IMAGE_SOURCE=qemu.cloud-init-alpine-image
+IMAGE_TEST_TYPE=cloud-init-image
+IMAGE_PACKAGES=["apache2-utils", "py3-bcrypt", "radicale"]
+IMAGE_BASE_QCOW2=base-alpine_0.1.4-3.15.4
+IMAGE_BASE_CHECKSUM=$(shell sha256sum output/${IMAGE_BASE_QCOW2}/${IMAGE_BASE_QCOW2}.qcow2 | awk '{ print $$1 }')
+
+export
+
+%:
+	$(MAKE) -f Makefile.common "$@"

@@ -1,0 +1,10 @@
+instance-id: iid-${hostname}-${instance_full_version}-${instance_extra_version}
+network-interfaces: |
+  auto eth0
+  iface eth0 inet static
+  address 192.168.3.33
+  netmask 255.255.255.0
+  gateway 192.168.3.1
+
+hostname: ${hostname}
+

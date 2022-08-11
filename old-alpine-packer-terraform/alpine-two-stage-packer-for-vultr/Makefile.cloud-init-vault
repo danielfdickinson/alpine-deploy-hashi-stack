@@ -1,0 +1,16 @@
+# NOTE: Instance configuration will require updating `/etc/vault.hcl`
+# to use SSL certificates and listen for non-local requests
+# In addition there will be manual steps around the generation of the
+# shards required to unseal the Vault and/or get a root token.
+
+IMAGE_NAME=cloud-init-vault
+IMAGE_VERSION=0.1.7
+IMAGE_PACKER_MODULE=images-from-snapshot
+IMAGE_SOURCE=vultr.cloud-init-alpine-image
+IMAGE_TEST_TYPE=cloud-init-image
+IMAGE_PACKAGES=["vault", "restic", "curl", "jq"]
+
+export
+
+%:
+	$(MAKE) -f Makefile.common "$@"

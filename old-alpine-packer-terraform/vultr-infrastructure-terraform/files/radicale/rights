@@ -1,0 +1,12 @@
+# The user "daniel" can read and write their own collections.
+[daniel]
+user = daniel
+collection = %(login)s(/.*)?
+permission = rw
+
+# Authentiated users can read any collection.
+[read]
+user = .+
+collection = .*
+permission = r
+

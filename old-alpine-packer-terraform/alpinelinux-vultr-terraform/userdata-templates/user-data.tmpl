@@ -1,0 +1,136 @@
+#cloud-config
+hostname: ${instance_name}-${host_tag}
+fqdn: ${instance_name}-${host_tag}.${domain}
+prefer_fqdn_over_hostname: true
+manage_resolv_conf: false
+manage_etc_hosts: true
+ntp:
+  ntp_client: ntp
+  %{~ if length(ntp_servers) > 0 ~}
+  servers:
+    %{~ for ntp_server in ntp_servers ~}
+    - ${ntp_server}
+    %{~ endfor ~}
+  %{~ endif}
+ssh_pwauth: false
+ssh_deletekeys: false
+ssh_genkeytypes: [rsa, ed25519]
+users:
+  - name: ${admin_username}
+    doas: ["permit ${doas_nopass} ${admin_username} as root"]
+    groups: [adm, sys, wheel]
+    hashed_passwd: ${fallback_admin_hashed_passwd}
+    lock_passwd: false
+    primary_group: ${admin_group}
+    %{~ if length(admin_user_ssh_pubkeys) > 0 ~}
+    ssh_authorized_keys:
+    %{~ for admin_user_ssh_pubkey in admin_user_ssh_pubkeys ~}
+      - ${admin_user_ssh_pubkey}
+        %{~ endfor ~}
+    %{~ endif}
+  - name: root
+    hashed_password: "x"
+    lock_passwd: true
+apk_repos:
+  preserve_repositories: true
+growpart:
+  mode: auto
+  device: ["/"]
+%{~ if length(mounts) > 0}
+mounts:
+  %{~ for mount in mounts ~}
+  - %{~ for part in mount}
+    - '${part}'
+    %{~ endfor ~}
+  %{~ endfor ~}
+%{~ endif}
+locale: en_CA.UTF-8
+write_files:
+  - path: /etc/periodic/daily/renew-machine-token.sh
+    content: ${renew_machine_token_sh}
+    encoding: gz+b64
+    owner: "root:root"
+    permissions: "0755"
+  - path: /etc/periodic/daily/renew-system-certs.sh
+    content: ${renew_certs_sh}
+    encoding: gz+b64
+    owner: "root:root"
+    permissions: "0755"
+  - path: /root/unwrap-machine-token.sh
+    content: ${unwrap_machine_token_sh}
+    encoding: gz+b64
+    owner: "root:root"
+    permissions: "0700"
+%{~ if cert_renew_token_wrapper_base64 != ""}
+  - path: /etc/vault-renew/cert-renew-token-wrapper.b64
+    content: ${cert_renew_token_wrapper_base64}
+    encoding: gz+b64
+    owner: "root:root"
+    permissions: "0600"
+%{~ endif ~}
+%{~ if provisioning_client_cert_bundle_pem != ""}
+  - path: /etc/vault-renew/client-cert-bundle.pem
+    content: ${provisioning_client_cert_bundle_pem}
+    encoding: gz+b64
+    owner: "root:vaultcert"
+    permissions: "0640"
+%{~ endif ~}
+%{~ if private_root_ca_cert != ""}
+  - path: /usr/local/share/ca-certificates/ca-private-internal.crt
+    content: ${private_root_ca_cert}
+    encoding: gz+b64
+    owner: "root:root"
+    permissions: "0644"
+%{~ endif ~}
+%{~ if length(files_to_write) > 0 ~}
+  %{~ for ftw in files_to_write}
+  - path: ${ftw}
+    %{~ if write_files[ftw]["permissions"] != ""}
+    permissions: "${write_files[ftw].permissions}"
+    %{~ endif ~}
+    %{~ if  write_files[ftw]["owner"] != ""}
+    owner: ${write_files[ftw].owner}
+    %{~ endif ~}
+    %{~ if write_files[ftw]["append"]}
+    append: true
+    %{~ endif ~}
+    %{~ if write_files[ftw]["encoding"] != ""}
+    encoding: ${write_files[ftw].encoding}
+    %{~ endif ~}
+    %{~ if write_files[ftw]["content"] != ""}
+    content: ${write_files[ftw].content}
+    %{~ endif ~}
+    %{~ if write_files[ftw]["source"] != ""}
+    source: ${write_files[ftw].source}
+    %{~ endif ~}
+  %{~ endfor ~}
+%{~ endif}
+package_update: true
+package_upgrade: true
+%{~ if length(packages) > 0}
+packages:
+  %{~ for package in packages}
+  - ${package}
+  %{~ endfor ~}
+%{~ endif}
+runcmd:
+%{~ if length(ntp_servers) > 0}
+  - [ sed, '-i', '-e', 's/NTPD_OPTS="-N .*/NTPD_OPTS="-N"/g', '/etc/conf.d/ntpd' ]
+  - [ service, ntpd, restart ]
+%{~ endif}
+%{~ if length(runcmds) > 0 ~}
+  %{~ for runcmd in runcmds}
+  - %{~ for part in runcmd}
+    - '${tostring(part)}'
+    %{~ endfor ~}
+  %{~ endfor ~}
+%{~ endif}
+  - [/usr/sbin/update-ca-certificates]
+%{~ if cert_renew_token_wrapper_base64 != ""}
+  - [sh, '-c', '/root/unwrap-machine-token.sh && rm -f /root/unwrap-machine-token.sh']
+%{~ if (provisioning_client_cert_bundle_pem != "") && (private_root_ca_cert != "") }
+  - [/etc/periodic/daily/renew-system-certs.sh]
+  - [/etc/periodic/daily/renew-machine-token.sh]
+%{~ endif}
+%{~ endif}
+

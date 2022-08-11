@@ -1,0 +1,74 @@
+#cloud-config
+hostname: ${hostname}
+fqdn: ${hostname}.${domain}
+prefer_fqdn_over_hostname: true
+manage_resolv_conf: true
+ntp:
+  ntp_client: ntp
+  servers:
+    - 192.168.3.2
+    - 0.pool.ntp.org
+    - 1.pool.ntp.org
+    - 2.pool.ntp.org
+    - 3.pool.ntp.org
+resolv_conf:
+  nameservers:
+    - 192.168.3.2
+  searchdomains:
+    - ${domain}
+  domain: ${domain}
+ssh_pwauth: false
+ssh_deletekeys: false
+ssh_genkeytypes: [rsa, ed25519]
+users:
+  - name: aideraan
+    doas: ["permit nopass aideraan as root"]
+    gecos: "Daniel F. Dickinson - Admin,,,"
+    groups: [adm, sys, wheel]
+    hashed_passwd: "*"
+    lock_passwd: false
+    primary_group: aideraan
+    ssh_authorized_keys:
+      - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIPC0BIhoKortImhc3r5utlep5c7QQo4FviaO5XxssECe d-f-d@DWMD
+  - name: root
+    hashed_password: "x"
+    lock_passwd: true
+apk_repos:
+  preserve_repositories: true
+growpart:
+  mode: auto
+  device: ["/"]
+disk_setup:
+  /dev/vdb:
+    table_type: 'mbr'
+    layout:
+      - 100
+    overwrite: false
+fs_setup:
+  - device: '/dev/vdb1'
+    filesystem: 'ext4'
+    overwrite: false
+mounts:
+  - [ /dev/vdb1, /srv, ext4, "rw,relatime,nodev,noexec", "0", "1" ]
+locale: en_CA.UTF-8
+write_files:
+  - path: /etc/motd
+    content: ${motd}
+    encoding: gz+b64
+    append: true
+runcmd:
+  - [ apk, update ]
+  - [ apk, upgrade ]
+  - [ sed, '-i', '-e', 's/NTPD_OPTS="-N .*/NTPD_OPTS="-N"/g', '/etc/conf.d/ntpd' ]
+  - [ service, ntpd, restart ]
+  - [ mkdir, '-p', '/srv/www' ]
+  - [ sh, '-c' , 'if ! test -d /srv/www/nocloud-metadata.internal.danielfdickinson.ca; then mv /var/www/nocloud-metadata.internal.danielfdickinson.ca /srv/www/; fi' ]
+  - [ rm, '-rf', '/var/www' ]
+  - [ mkdir, '-p', '/srv/lib' ]
+  - [ mkdir, '-p', '-m', '0750', '/srv/lib/lighttpd' ]
+  - [ chown, 'lighttpd:lighttpd', '/srv/lib/lighttpd' ]
+  - [ usermod, '-d', '/srv/lib/lighttpd', 'lighttpd' ]
+  - [ sh, '-c' , 'if ! test -d /srv/lib/vault; then mv /var/lib/vault /srv/lib/ || exit 1; fi' ]
+  - [ rm, '-rf', '/var/lib/lighttpd' ]
+  - [ rm, '-rf', '/var/lib/vault' ]
+
