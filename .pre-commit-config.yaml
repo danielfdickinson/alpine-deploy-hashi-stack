@@ -54,6 +54,7 @@ repos:
     rev: 2.1.6
     hooks:
       - id: shellcheck
+        exclude: (.*\.sh\.tmpl)
           # - id: shfmt
           # - id: git-check
           #- id: check-mailmap
