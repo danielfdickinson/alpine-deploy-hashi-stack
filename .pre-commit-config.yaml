@@ -54,7 +54,7 @@ repos:
     rev: 2.1.6
     hooks:
       - id: shellcheck
-      - id: shfmt
+          # - id: shfmt
           # - id: git-check
           #- id: check-mailmap
           #- id: script-must-have-extension
